@@ -1,0 +1,87 @@
+#Classification 2017/08/01
+
+head(iris)
+names(iris)
+summary(iris)
+
+plot(iris[,1:4], col=iris$Species)
+
+#算準確度
+#diag - 矩陣對角線
+accu <- function( m ){
+  sum( diag(m) / sum(m) )
+}
+
+#sample( train + test 8:2 )
+#1:150 抽 150*0.8(120)的data(抽數字)
+s.no <- sample( nrow(iris), nrow(iris)*0.8 )
+train <- iris[s.no, ] ;train
+test <- iris[-s.no, ] ;test
+
+###Decision Tree (CART)
+library(rpart)
+install.packages("rpart.plot")
+library(rpart.plot)
+#rpart裡的parm or control可以控制如何切割樹
+
+model.tree <- rpart( Species ~. , data = train)
+rpart.plot( model.tree )
+#預測成機率值 + type="class"
+pre.tree <- predict( model.tree, test[,-5], type = "class")
+accu( table(test$Species, pre.tree) )
+
+
+### Bayesian
+install.packages("e1071")
+library(e1071)
+#e1071有很多machining learning的方法
+
+model.baye <- naiveBayes( Species ~., data=train)
+pre.baye <- predict( model.baye, test[,-5])
+accu( table( test$Species, pre.baye) )
+
+### SVM
+library(e1071)
+
+model.svm <- svm( Species~., data=train)
+pre.svm <- predict( model.svm, test[,-5])
+accu( table( test$Species, pre.svm) )
+
+#可以自己調整超平面
+model.svm <- svm( Species~., data=train, kernel="sigmoid" )
+summary(model.svm)
+
+###ANN
+install.packages("nnet")
+install.packages("NeuralNetTools")
+library(nnet)
+
+model.ann <- nnet( Species~., data = train, size = 10)
+
+library(NeuralNetTools)
+plotnet(model.ann)
+
+pre.ann <- predict(model.ann, test[,-5], type="class")
+accu( table( test$Species, pre.ann ))
+
+
+###ANN part2 (BPN)
+install.packages("neuralnet")
+library(neuralnet)
+
+
+###KNN
+library(class)
+
+pre.knn <- knn( train[1:4], test[,1:4], train[,5], k=3)
+accu( table(test[,5], pre.knn ))
+
+
+###LDA
+library(MASS)
+
+model.lda <- lda( Species ~., data = train)
+pre.lda <- predict( model.lda, test[,-5])
+pre.lda <- predict( model.lda, test[,-5])$class
+accu( table( test[,5], pre.lda ))
+
